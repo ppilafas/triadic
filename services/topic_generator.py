@@ -50,7 +50,9 @@ Return only the topics, one per line, without numbering or bullets. Keep each to
         
         # Use a lightweight model for topic generation
         # Note: file_search tool requires reasoning_effort to be at least 'medium'
-        # Use 'minimal' only when no vector store is provided (no file_search needed)
+        # web_search tool requires reasoning_effort to be at least 'medium'
+        # Use 'minimal' only when no tools are needed
+        # Disable web_search for topic generation (not needed for generating topics)
         reasoning_effort = "medium" if vector_store_id else "minimal"
         
         api_config = {
@@ -58,6 +60,7 @@ Return only the topics, one per line, without numbering or bullets. Keep each to
             "reasoning_effort": reasoning_effort,
             "text_verbosity": "low",
             "reasoning_summary_enabled": False,
+            "web_search_enabled": False,  # Explicitly disable web_search for topic generation
             "vector_store_id": vector_store_id  # Include for RAG if available
         }
         

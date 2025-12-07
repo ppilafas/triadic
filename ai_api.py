@@ -279,7 +279,8 @@ def _build_responses_kwargs(prompt_text: str, config: Optional[Dict[str, Any]], 
     
     # Add file_search tool if vector store is available
     vs_id = _get_config_value("vector_store_id", config)
-    if vs_id:
+    # Only add file_search if vs_id is truthy and not an empty string
+    if vs_id and vs_id != "":
         tools.append({"type": "file_search", "vector_store_ids": [vs_id]})
     
     # Add web_search tool if enabled

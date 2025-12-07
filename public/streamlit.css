@@ -273,6 +273,18 @@
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
         }
         
+        /* Add padding to main content area to account for Streamlit header */
+        /* Streamlit header is typically ~60px tall */
+        [data-testid="stAppViewContainer"] > div:first-child,
+        [data-testid="stAppViewContainer"] main > div:first-child {
+            padding-top: 60px !important; /* Space for Streamlit header */
+        }
+        
+        /* Also add padding to scrollable containers */
+        [data-testid="stVerticalBlock"] > div[style*="overflow"] {
+            padding-top: 60px !important; /* Space for Streamlit header */
+        }
+        
         /* ========== FIXED INPUT CONTAINER (Native Streamlit Approach) ========== */
         /* Lock chat input to bottom of viewport - immune to scroll */
         /* Subtle, integrated styling that doesn't dominate the UI */
@@ -307,8 +319,10 @@
         }
         
         /* Add padding to scrollable container so content isn't hidden behind fixed input */
+        /* Note: padding-top is handled above, padding-bottom by fixed-chat-input-container */
         [data-testid="stVerticalBlock"] > div[style*="overflow"] {
             padding-bottom: 120px !important;
+            /* padding-top is set by section above */
         }
         
         /* ========== SIDEBAR ========== */
@@ -982,6 +996,17 @@
             width: 100% !important;
         }
         
+        /* ========== IRC MODE WORD WRAPPING ========== */
+        /* Ensure IRC code blocks wrap properly and don't require horizontal scrolling */
+        [data-testid="stCodeBlock"] pre,
+        [data-testid="stCodeBlock"] code {
+            white-space: pre-wrap !important;
+            word-wrap: break-word !important;
+            overflow-wrap: break-word !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+        }
+        
         /* ========== LEGACY MESSAGE BUBBLES (Original HTML-based) ========== */
         .message-bubble-enhanced {
             transition: transform var(--duration-normal) var(--ease-out),
@@ -1408,4 +1433,128 @@
                 rgba(77, 166, 255, 0.7) 0%, 
                 rgba(77, 166, 255, 0.6) 100%) !important;
             border-color: rgba(15, 23, 42, 0.4) !important;
+        }
+        
+        /* ========== TIMELINE SUMMARY CARDS ========== */
+        .timeline-summary-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 50%, rgba(30, 41, 59, 0.8) 100%);
+            background-color: rgba(30, 41, 59, 0.95);
+            border: 1.5px solid rgba(148, 163, 184, 0.2);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-lg) var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all var(--duration-normal) var(--ease-in-out);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .timeline-summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-xl), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+        
+        .timeline-summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: var(--radius-xl);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .timeline-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-md);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .timeline-summary-header h3 {
+            font-size: var(--font-size-xl);
+            font-weight: var(--font-weight-bold);
+            color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+            border: none;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .timeline-timestamp {
+            font-size: var(--font-size-sm);
+            color: #94a3b8;
+            font-family: 'Courier New', monospace;
+            background: rgba(15, 23, 42, 0.5);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+        
+        .timeline-summary-content {
+            color: #cbd5e1;
+            font-size: var(--font-size-base);
+            line-height: var(--line-height-relaxed);
+            margin-bottom: var(--spacing-md);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .timeline-summary-meta {
+            font-size: var(--font-size-sm);
+            color: #94a3b8;
+            position: relative;
+            z-index: 1;
+            padding-top: var(--spacing-sm);
+            border-top: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        
+        /* ========== SETTINGS SECTION CARDS ========== */
+        .settings-section-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.7) 100%);
+            background-color: rgba(30, 41, 59, 0.8);
+            border: 1.5px solid rgba(148, 163, 184, 0.2);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg) var(--spacing-xl);
+            margin-bottom: var(--spacing-lg);
+            box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            transition: all var(--duration-normal) var(--ease-in-out);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        
+        .settings-section-card:hover {
+            border-color: rgba(148, 163, 184, 0.3);
+            box-shadow: var(--shadow-lg), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        }
+        
+        .settings-section-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: var(--radius-lg);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 50%, rgba(255, 255, 255, 0) 100%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .settings-section-card > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .settings-section-card h3 {
+            margin-top: 0 !important;
+            padding-top: 0 !important;
         }

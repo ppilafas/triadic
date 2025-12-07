@@ -46,6 +46,19 @@ echo -e "Commit message: ${YELLOW}${COMMIT_MSG}${NC}"
 git commit -m "$COMMIT_MSG"
 echo ""
 
+# Check if remote has changes and pull if needed
+echo -e "${GREEN}Checking for remote changes...${NC}"
+git fetch origin main
+if [ "$(git rev-list HEAD...origin/main --count)" != "0" ]; then
+    echo -e "${YELLOW}Remote has changes. Pulling with rebase...${NC}"
+    if ! git pull --rebase origin main; then
+        echo -e "${RED}❌ Failed to pull remote changes. Please resolve conflicts manually.${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}✅ Successfully rebased local changes on top of remote.${NC}"
+    echo ""
+fi
+
 # Push to GitHub
 echo -e "${GREEN}Pushing to GitHub...${NC}"
 if git push origin main; then
