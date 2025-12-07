@@ -1,0 +1,16 @@
+# Core AI dependencies
+openai>=1.0.0
+
+# Streamlit framework and extensions
+streamlit>=1.51.0
+streamlit-autorefresh>=0.0.6
+streamlit-authenticator>=0.3.2
+
+# Data processing and visualization (for telemetry)
+pandas>=2.0.0
+altair>=5.0.0
+numpy>=1.24.0
+
+# Note: Chainlit is not needed for Streamlit deployment
+# chainlit>=1.0.0
+
