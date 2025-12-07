@@ -24,7 +24,7 @@ from exceptions import TranscriptionError, FileIndexingError
 from config import (
     model_config,
     timing_config,
-    OPENAI_API_KEY
+    get_openai_api_key
 )
 from utils.logging_config import get_logger, setup_logging
 from core.message_builder import build_prompt_from_messages
@@ -86,10 +86,16 @@ if not require_auth(allow_guest=True):
 
 # ---------- Initialization (before navigation) ----------
 
+# Check for API key - dynamically check (allows Settings page to set it)
+OPENAI_API_KEY = get_openai_api_key()
+
 if not OPENAI_API_KEY:
-    st.error("**OPENAI_API_KEY** is missing.", icon=":material/error:")
-    logger.error("OpenAI API key not found in environment")
-    st.stop()
+    st.warning("**⚠️ OPENAI_API_KEY is missing.**", icon=":material/warning:")
+    st.info("💡 You can add your API key in **Settings** page (click Settings in the sidebar).", icon=":material/info:")
+    st.info("Alternatively, set it via Streamlit Cloud secrets or environment variables.", icon=":material/info:")
+    logger.warning("OpenAI API key not found - user can set it in Settings")
+    # Don't stop - allow user to navigate to Settings to add key
+    # st.stop()  # Commented out to allow navigation to Settings
 
 # Initialize session state (only once, before navigation)
 # Note: Guest users won't have state restored (no persistence)

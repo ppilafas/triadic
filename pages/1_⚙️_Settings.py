@@ -79,6 +79,48 @@ st.toggle(
 
 st.divider()
 
+# API Configuration
+st.markdown("### :material/key: API Configuration")
+
+# Check if key is already set (from secrets/env)
+from config import OPENAI_API_KEY
+has_key_from_env = bool(OPENAI_API_KEY and not st.session_state.get("openai_api_key"))
+
+if has_key_from_env:
+    st.info("✅ API key is configured via environment/secrets. You can override it below if needed.", icon=":material/info:")
+else:
+    st.warning("⚠️ No API key found. Please enter your OpenAI API key below.", icon=":material/warning:")
+
+# API Key input (password type for security)
+current_key = st.session_state.get("openai_api_key", "")
+# Show masked value if key exists
+display_value = "••••••••" + current_key[-4:] if current_key and len(current_key) > 4 else ""
+
+api_key_value = st.text_input(
+    "**OpenAI API Key**",
+    value="" if has_key_from_env and not current_key else current_key,
+    type="password",
+    key="openai_api_key_input",
+    help="Enter your OpenAI API key. Get one at https://platform.openai.com/api-keys. This key is stored in session state and takes precedence over environment variables.",
+    placeholder="sk-..." if not current_key else None
+)
+
+# Store in session state if provided
+if api_key_value and api_key_value.strip():
+    new_key = api_key_value.strip()
+    if new_key != current_key:
+        st.session_state["openai_api_key"] = new_key
+        st.success("✅ API key saved! The app will use this key.", icon=":material/check_circle:")
+        st.rerun()  # Reload to pick up the new key
+elif api_key_value == "" and "openai_api_key" in st.session_state and not has_key_from_env:
+    # Clear if user deleted the key and no env key exists
+    del st.session_state["openai_api_key"]
+    st.info("API key cleared. Using environment/secrets key if available.", icon=":material/info:")
+
+st.caption("💡 Your key is stored securely in session state and never committed to git.")
+
+st.divider()
+
 # Audio Settings
 st.markdown("### :material/volume_up: Audio Settings")
 

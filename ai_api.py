@@ -24,7 +24,7 @@ except ImportError:
 from openai import OpenAI
 
 # Import our improved modules
-from config import model_config, OPENAI_API_KEY, OPENAI_MODEL
+from config import model_config, get_openai_api_key, get_openai_model
 from exceptions import VectorStoreError, FileIndexingError, ModelGenerationError, ConfigurationError
 from utils.logging_config import get_logger
 from utils.validators import sanitize_filename
@@ -38,14 +38,33 @@ logger = get_logger(__name__)
 
 # ---------- OpenAI client & base model ----------
 
-_client = OpenAI(api_key=OPENAI_API_KEY) if OPENAI_API_KEY else None
-DEFAULT_MODEL_NAME = OPENAI_MODEL or model_config.DEFAULT_MODEL
+# Store last used API key to detect changes
+_last_api_key: Optional[str] = None
+_client: Optional[OpenAI] = None
 
 def get_client() -> OpenAI:
-    """Get OpenAI client instance, raising error if not initialized."""
-    if _client is None:
+    """Get OpenAI client instance, creating it dynamically if needed."""
+    global _client, _last_api_key
+    
+    # Get API key dynamically (checks session state, secrets, env)
+    api_key = get_openai_api_key()
+    
+    if not api_key:
         raise ConfigurationError("OpenAI client not initialized; missing OPENAI_API_KEY")
+    
+    # Recreate client if key changed or client doesn't exist
+    if _client is None or _last_api_key != api_key:
+        _client = OpenAI(api_key=api_key)
+        _last_api_key = api_key
+    
     return _client
+
+def get_default_model_name() -> str:
+    """Get default model name dynamically."""
+    model = get_openai_model()
+    return model or model_config.DEFAULT_MODEL
+
+DEFAULT_MODEL_NAME = get_default_model_name()
 
 # ---------- Universal Session Helpers ----------
 
