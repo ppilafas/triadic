@@ -43,12 +43,7 @@ from utils.streamlit_auth import require_auth, get_current_user
 # Import business logic
 from services.turn_executor import execute_turn
 from utils.topic_handler import handle_auto_topic_generation, handle_topic_dialog
-from utils.auto_run_manager import (
-    check_and_resume_auto_run,
-    handle_auto_run_delay,
-    should_execute_auto,
-    start_auto_run_delay
-)
+# Note: Removed auto_run_manager imports - using simpler inline approach that worked before
 
 # Initialize logging
 setup_logging()
@@ -134,6 +129,41 @@ def home_page():
     # the latest auto_mode state after all sidebar widgets have updated session state
     podcast_stage()
     
+    # Handle auto-mode delay OUTSIDE fragment (after fragment completes)
+    # CRITICAL: This must be outside the fragment to avoid blocking issues with time.sleep()
+    # Check if we just executed an auto-run turn and need to wait for delay
+    if st.session_state.get("_auto_run_just_executed", False):
+        logger.info("Auto-run turn just executed - checking conditions for delay")
+        
+        # Re-check all conditions after turn completion
+        auto_mode = st.session_state.get("auto_mode", False)
+        turn_in_progress = st.session_state.get("turn_in_progress", False)
+        has_messages = len(st.session_state.get("show_messages", [])) > 0
+        
+        logger.info(f"Auto-run delay check: auto_mode={auto_mode}, turn_in_progress={turn_in_progress}, has_messages={has_messages}")
+        
+        # Only proceed with delay if all conditions are still met
+        if auto_mode and not turn_in_progress and has_messages:
+            delay_time = st.session_state.get("auto_delay", 2.0)
+            logger.info(f"Auto-run delay: waiting {delay_time}s before next turn")
+            # Use the original blocking approach - it works in Streamlit when outside fragment
+            # This delay happens AFTER the turn is complete and visible
+            time.sleep(delay_time)
+            # Re-check auto_mode after delay (user might have disabled it)
+            if st.session_state.get("auto_mode", False):
+                logger.info("Auto-run delay complete - continuing auto-run")
+                # Clear the flag AFTER delay completes (so next check can execute)
+                st.session_state._auto_run_just_executed = False
+                st.rerun()
+            else:
+                logger.info("Auto-run was disabled during delay - stopping")
+                # Clear the flag even if auto_mode was disabled
+                st.session_state._auto_run_just_executed = False
+        else:
+            logger.warning(f"Auto-run conditions not met after turn: auto_mode={auto_mode}, turn_in_progress={turn_in_progress}, has_messages={has_messages}")
+            # Clear the flag even if conditions aren't met (to prevent stuck state)
+            st.session_state._auto_run_just_executed = False
+    
     # ========== INPUT CONTAINER (OUTSIDE FRAGMENT) ==========
     # CRITICAL: Render chat input OUTSIDE the fragment to ensure it always sees
     # the latest auto_mode state. Fragments can execute before widget state updates,
@@ -214,20 +244,10 @@ def podcast_stage():
                 if "_turn_start_time" in st.session_state:
                     del st.session_state._turn_start_time
     
-    # Clean up auto-run state if auto-mode is disabled but flags are still set
-    # This can happen if user toggled off auto-run but flags weren't cleared
-    auto_mode = st.session_state.get("auto_mode", False)
-    if not auto_mode:
-        if "_auto_run_waiting" in st.session_state:
-            del st.session_state._auto_run_waiting
-        if "_auto_run_wait_start" in st.session_state:
-            del st.session_state._auto_run_wait_start
-    
-    # Resume auto-run if we were waiting and delay has elapsed
-    check_and_resume_auto_run()
+    # Note: Removed complex auto-run delay logic - using simpler time.sleep approach
     
     # Page header with dynamic summary
-    st.header(":material/podcasts: Triadic • GPT-5.1 Podcast", divider="rainbow")
+    st.header(":material/podcasts: Triadic • When AI's talk to each other", divider="rainbow")
     
     # Show conversation summary if available
     conversation_summary = st.session_state.get("conversation_summary")
@@ -243,7 +263,36 @@ def podcast_stage():
     # Check for pending turns BEFORE entering containers
     pending_turn = st.session_state.get("pending_turn", False) and not st.session_state.turn_in_progress
     manual_next = st.session_state.get("_manual_next", False)
-    should_execute_auto_flag = should_execute_auto()
+    
+    # Auto-run requires: auto_mode enabled, not in progress, and has messages to continue
+    # CRITICAL: Don't execute if we just executed a turn (wait for delay to complete first)
+    # This prevents executing again immediately after a turn completes
+    auto_mode = st.session_state.get("auto_mode", False)
+    turn_in_progress = st.session_state.get("turn_in_progress", False)
+    has_messages = len(st.session_state.get("show_messages", [])) > 0
+    just_executed = st.session_state.get("_auto_run_just_executed", False)
+    
+    should_execute_auto = (
+        auto_mode and 
+        not turn_in_progress and 
+        has_messages and
+        not just_executed  # Don't execute if we just executed (wait for delay)
+    )
+    
+    # Debug logging for auto-run conditions (use INFO level so it's visible)
+    if auto_mode:
+        logger.info(
+            f"[AUTO-RUN] Check: auto_mode={auto_mode}, turn_in_progress={turn_in_progress}, "
+            f"has_messages={has_messages}, just_executed={just_executed}, should_execute={should_execute_auto}"
+        )
+        # Also print to stderr for immediate visibility
+        import sys
+        print(f"[AUTO-RUN] Check: auto_mode={auto_mode}, turn_in_progress={turn_in_progress}, "
+              f"has_messages={has_messages}, just_executed={just_executed}, should_execute={should_execute_auto}", 
+              file=sys.stderr, flush=True)
+    elif auto_mode is False and has_messages:
+        # Log when auto_mode is False but we have messages (might help debug)
+        logger.info(f"[AUTO-RUN] Auto-mode is disabled (has_messages={has_messages})")
     
     # ========== SCROLLABLE CHAT AREA ==========
     # Use native Streamlit container with height parameter for independent scrolling
@@ -254,7 +303,7 @@ def podcast_stage():
         # This ensures all historical messages (including newly added host message) are rendered
         # before any new streaming bubbles from execute_turn()
         # Route to appropriate renderer based on view mode (decoupled)
-        view_mode = st.session_state.get("view_mode", "bubbles")
+        view_mode = st.session_state.get("view_mode", "irc")
         if view_mode == "irc":
             render_irc_style_history(st.session_state.show_messages)
             # Create streaming container for IRC mode (will be updated during execute_turn)
@@ -291,22 +340,36 @@ def podcast_stage():
                 st.rerun()
                 st.session_state._last_turn_message_added = False
 
-        if should_execute_auto_flag:
+        if should_execute_auto:
             # Execute turn inside container for auto-mode
+            import sys
+            print("=" * 80, file=sys.stderr, flush=True)
+            print("[AUTO-RUN] *** EXECUTING TURN ***", file=sys.stderr, flush=True)
+            print("=" * 80, file=sys.stderr, flush=True)
+            logger.info("=" * 80)
+            logger.info("[AUTO-RUN] *** EXECUTING TURN ***")
+            logger.info("=" * 80)
             execute_turn()
-            # Rerun immediately to show the turn execution (streaming, etc.)
+            # Mark that we just executed an auto-run turn
+            # This flag will be checked in home_page() (outside fragment) to trigger delay
+            st.session_state._auto_run_just_executed = True
+            logger.info("[AUTO-RUN] Set _auto_run_just_executed=True, triggering rerun")
+            # Always rerun to show streaming output (even if message wasn't added due to error)
+            # The delay check in home_page() will handle continuing auto-run
+            st.rerun()
+            # Clear message flag if it was set
             if st.session_state.get("_last_turn_message_added", False):
-                # Mark that we need to wait for delay before next auto-run
-                start_auto_run_delay()
                 st.session_state._last_turn_message_added = False
-                st.rerun()
-    
-    # Handle auto-mode delay OUTSIDE container (after container is rendered)
-    # Note: This logic only runs when podcast_stage() is called, which only happens on home page
-    # When user navigates to Settings or other pages, this code doesn't run, so auto-run pauses
-    # When user returns to home page, check_and_resume_auto_run() handles resuming if delay elapsed
-    # This function continues waiting if delay hasn't elapsed yet
-    handle_auto_run_delay()
+            # Exit fragment early - delay check will happen in home_page() on next rerun
+            return
+        elif auto_mode and not should_execute_auto:
+            # Auto-mode is enabled but we're not executing - log why
+            import sys
+            print(f"[AUTO-RUN] Auto-mode enabled but NOT executing: turn_in_progress={turn_in_progress}, "
+                  f"has_messages={has_messages}, just_executed={just_executed}", 
+                  file=sys.stderr, flush=True)
+            logger.info(f"[AUTO-RUN] Auto-mode enabled but NOT executing: turn_in_progress={turn_in_progress}, "
+                       f"has_messages={has_messages}, just_executed={just_executed}")
     
     # NOTE: Chat input rendering has been moved OUTSIDE the fragment to home_page()
     # This ensures it always sees the latest auto_mode state after sidebar widgets update

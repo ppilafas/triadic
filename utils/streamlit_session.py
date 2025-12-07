@@ -50,7 +50,7 @@ def initialize_session_state() -> None:
     if "last_audio_id" not in st.session_state:
         st.session_state.last_audio_id = None
     if "view_mode" not in st.session_state:
-        st.session_state.view_mode = "bubbles"  # Default to bubbles view
+        st.session_state.view_mode = "irc"  # Default to IRC view
         st.session_state.summary_history = []  # Initialize summary history
 
 

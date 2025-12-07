@@ -90,7 +90,7 @@ def execute_turn() -> None:
         }
         
         # Get view mode
-        view_mode = st.session_state.get("view_mode", "bubbles")
+        view_mode = st.session_state.get("view_mode", "irc")
         
         # Render turn response (handles both IRC and Bubble modes)
         ai_text, tts_bytes = render_turn_response(

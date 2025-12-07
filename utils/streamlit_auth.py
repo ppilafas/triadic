@@ -168,18 +168,31 @@ def render_login_page() -> tuple[Optional[str], Optional[bool], Optional[str]]:
         return None, None, None
     
     # Render login form
-    # Note: login() method signature: login(location='main', key='Login', ...)
-    # Location must be 'main', 'sidebar', or 'unrendered'
-    # The 'key' parameter defaults to 'Login', so we can just pass location
+    # CRITICAL: Check for duplicate form error first - if form already exists, don't try to create it again
+    # This happens on reruns when the form is already rendered
     try:
         # Standard call: location as first positional argument
+        # Note: login() signature: login(location='main', key='Login', ...)
         name, authentication_status, username = authenticator.login('main')
     except Exception as e:
-        # Fallback: try with location as keyword argument
+        error_str = str(e).lower()
+        # Check if it's a duplicate form error - if so, this is a rerun and form already exists
+        if "multiple identical forms" in error_str or "duplicate" in error_str:
+            # Form already exists from previous render - this is normal on reruns
+            # Return None to indicate we're waiting for user input
+            logger.debug("Login form already exists (rerun) - waiting for user input")
+            return None, None, None
+        
+        # For other errors, try with location as keyword argument
         logger.debug(f"Login with positional location failed, trying keyword: {e}")
         try:
             name, authentication_status, username = authenticator.login(location='main')
         except Exception as e2:
+            error_str2 = str(e2).lower()
+            # Check again for duplicate form error
+            if "multiple identical forms" in error_str2 or "duplicate" in error_str2:
+                logger.debug("Login form already exists (rerun) - waiting for user input")
+                return None, None, None
             logger.error(f"All login attempts failed: {e2}", exc_info=True)
             return None, None, None
     

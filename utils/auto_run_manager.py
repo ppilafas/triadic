@@ -141,10 +141,21 @@ def should_execute_auto() -> bool:
                 del st.session_state._turn_start_time
                 turn_in_progress = False
     
-    return (
+    # Debug logging to help diagnose why auto-run isn't starting
+    result = (
         auto_mode and
         not turn_in_progress and
         has_messages and
         not is_waiting_for_delay
     )
+    
+    if auto_mode and not result:
+        # Auto-mode is enabled but conditions aren't met - log why
+        logger.debug(
+            f"Auto-run enabled but not executing: "
+            f"auto_mode={auto_mode}, turn_in_progress={turn_in_progress}, "
+            f"has_messages={has_messages}, is_waiting_for_delay={is_waiting_for_delay}"
+        )
+    
+    return result
 

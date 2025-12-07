@@ -32,7 +32,7 @@ def render_sidebar_view_mode() -> None:
         "irc": ":material/code: IRC Text"
     }
     
-    current_mode = st.session_state.get("view_mode", "bubbles")
+    current_mode = st.session_state.get("view_mode", "irc")
     
     selected_mode = st.radio(
         "Display Style",
@@ -59,6 +59,31 @@ def render_sidebar_main_controls() -> bool:
     Returns:
         True if "Trigger Next Turn" button was clicked, False otherwise
     """
+    # DEBUG: Print to ensure function is called
+    # Use both print and logger, and also write to stderr to ensure visibility
+    import sys
+    import os
+    
+    # Force flush to ensure output appears immediately
+    print("=" * 80, file=sys.stderr, flush=True)
+    print("[AUTO-RUN TOGGLE] render_sidebar_main_controls() CALLED", file=sys.stderr, flush=True)
+    print("=" * 80, file=sys.stderr, flush=True)
+    print("=" * 80, flush=True)
+    print("[AUTO-RUN TOGGLE] render_sidebar_main_controls() CALLED", flush=True)
+    print("=" * 80, flush=True)
+    
+    # Also write directly to a file as a backup
+    try:
+        with open("/tmp/triadic_auto_run.log", "a") as f:
+            f.write(f"[{time.strftime('%H:%M:%S')}] render_sidebar_main_controls() CALLED\n")
+            f.flush()
+    except Exception:
+        pass
+    
+    logger.info("=" * 80)
+    logger.info("[AUTO-RUN TOGGLE] render_sidebar_main_controls() CALLED")
+    logger.info("=" * 80)
+    
     st.markdown("### :material/play_circle: Main Controls")
     
     # Check if at least one turn has been completed
@@ -68,79 +93,177 @@ def render_sidebar_main_controls() -> bool:
     # On Air Toggle (disabled if no turns completed yet)
     auto_mode_prev = st.session_state.get("auto_mode", False)
     current_auto_mode = st.session_state.get("auto_mode", False)
-    
-    # CRITICAL: Streamlit widgets with keys store their state in st.session_state[key]
-    # We need to ensure the widget's key state is synced with auto_mode before rendering.
-    # If auto_mode was restored from persistence, we must sync the widget key to match.
     widget_key = "sidebar_auto_mode_toggle"
     
-    # Sync widget key state with auto_mode if they're out of sync
-    # This ensures restored state (auto_mode=True) is reflected in the widget
-    if widget_key in st.session_state:
-        widget_state = st.session_state[widget_key]
-        if widget_state != current_auto_mode:
-            # Widget state is out of sync - update it to match session state
-            # This happens when auto_mode was restored from persistence but widget key wasn't
-            st.session_state[widget_key] = current_auto_mode
-            logger.debug(f"Synced widget key {widget_key} to match auto_mode: {current_auto_mode}")
+    import sys
+    print(f"[AUTO-RUN TOGGLE] Initial state: auto_mode_prev={auto_mode_prev}, current_auto_mode={current_auto_mode}", file=sys.stderr, flush=True)
+    print(f"[AUTO-RUN TOGGLE] Widget key state: {widget_key}={st.session_state.get(widget_key, 'NOT SET')}", file=sys.stderr, flush=True)
+    print(f"[AUTO-RUN TOGGLE] Has completed turn: {has_completed_turn}", file=sys.stderr, flush=True)
+    logger.info(f"[AUTO-RUN TOGGLE] Initial state: auto_mode_prev={auto_mode_prev}, current_auto_mode={current_auto_mode}")
+    logger.info(f"[AUTO-RUN TOGGLE] Widget key state: {widget_key}={st.session_state.get(widget_key, 'NOT SET')}")
+    logger.info(f"[AUTO-RUN TOGGLE] Has completed turn: {has_completed_turn}")
+    
+    # CRITICAL: Streamlit widgets with keys store their state in st.session_state[key]
+    # The widget's internal state (stored in the key) takes precedence over the value parameter.
+    # 
+    # Problem: If the widget key exists with a conflicting value, it can prevent the toggle
+    # from working even when the user tries to change it.
+    #
+    # Solution: 
+    # 1. If auto_mode is True (from restoration), ensure widget key matches (sync it)
+    # 2. If auto_mode is False and widget key exists but conflicts, clear it to let value parameter work
+    # 3. This ensures the widget can be toggled normally by user interaction
     
     # Allow disabling even if no turns completed, but prevent enabling
     can_enable = has_completed_turn or current_auto_mode
+    import sys
+    print(f"[AUTO-RUN TOGGLE] Can enable: {can_enable} (has_completed_turn={has_completed_turn}, current_auto_mode={current_auto_mode})", file=sys.stderr, flush=True)
+    logger.info(f"[AUTO-RUN TOGGLE] Can enable: {can_enable} (has_completed_turn={has_completed_turn}, current_auto_mode={current_auto_mode})")
     
-    # Render toggle - value parameter ensures it shows the correct state
-    # The widget will update both its own key state and auto_mode
+    # Render toggle
+    # CRITICAL: Don't interact with widget key before rendering - causes Streamlit warnings
+    # Just render with value parameter and let Streamlit manage the widget key automatically
+    # If widget key exists, it will take precedence; if not, value parameter is used
+    print(f"[AUTO-RUN TOGGLE] Rendering toggle with value={current_auto_mode}, disabled={not can_enable}", file=sys.stderr, flush=True)
+    logger.info(f"[AUTO-RUN TOGGLE] Rendering toggle with value={current_auto_mode}, disabled={not can_enable}")
     toggle_value = st.toggle(
         "**On Air**",
-        value=current_auto_mode,  # Explicitly set from session state (ensures restored state is shown)
+        value=current_auto_mode,  # Default value from session state
         key=widget_key,
         disabled=not can_enable,
         help="Automatically trigger turns at specified cadence. Requires at least one completed turn." if not has_completed_turn else "Automatically trigger turns at specified cadence"
     )
     
-    # Update session state with widget value (ensures they stay in sync)
+    print(f"[AUTO-RUN TOGGLE] Toggle rendered, returned value: {toggle_value}", file=sys.stderr, flush=True)
+    print(f"[AUTO-RUN TOGGLE] Widget key after render: {widget_key}={st.session_state.get(widget_key, 'NOT SET')}", file=sys.stderr, flush=True)
+    logger.info(f"[AUTO-RUN TOGGLE] Toggle rendered, returned value: {toggle_value}")
+    logger.info(f"[AUTO-RUN TOGGLE] Widget key after render: {widget_key}={st.session_state.get(widget_key, 'NOT SET')}")
+    
+    # CRITICAL: Always update session state with widget value
+    # The widget is the source of truth - it reflects user interaction
+    auto_mode_before_update = st.session_state.get("auto_mode", False)
     st.session_state.auto_mode = toggle_value
+    auto_mode_after_update = st.session_state.auto_mode
+    
+    print(f"[AUTO-RUN TOGGLE] State update: {auto_mode_before_update} -> {auto_mode_after_update} (toggle_value={toggle_value})", file=sys.stderr, flush=True)
+    logger.info(f"[AUTO-RUN TOGGLE] Updated session state: auto_mode={auto_mode_after_update} (was {auto_mode_before_update})")
+    
+    # Check if toggle value changed from what we expected
+    if toggle_value != current_auto_mode:
+        print(f"[AUTO-RUN TOGGLE] ⚠️ TOGGLE VALUE CHANGED: {current_auto_mode} -> {toggle_value}", file=sys.stderr, flush=True)
+        logger.info(f"[AUTO-RUN TOGGLE] Toggle value changed: {current_auto_mode} -> {toggle_value}")
     
     # Show info message if toggle is disabled
     if not has_completed_turn and not current_auto_mode:
         st.info("Complete at least one turn before enabling auto-run.", icon=":material/info:")
     
     # Handle state changes
+    import sys
+    print(f"[AUTO-RUN TOGGLE] Checking state change: auto_mode={st.session_state.auto_mode}, auto_mode_prev={auto_mode_prev}", file=sys.stderr, flush=True)
+    logger.info(f"[AUTO-RUN TOGGLE] Checking state change: auto_mode={st.session_state.auto_mode}, auto_mode_prev={auto_mode_prev}")
+    
     if st.session_state.auto_mode and not auto_mode_prev:
-        if has_completed_turn:
-            # Clear any stuck waiting flags when enabling auto-run
-            if "_auto_run_waiting" in st.session_state:
-                del st.session_state._auto_run_waiting
-            if "_auto_run_wait_start" in st.session_state:
-                del st.session_state._auto_run_wait_start
-            # Ensure turn_in_progress is not stuck
-            if st.session_state.get("turn_in_progress", False):
-                logger.warning("Clearing stuck turn_in_progress flag when enabling auto-run")
-                st.session_state.turn_in_progress = False
-                if "_turn_start_time" in st.session_state:
-                    del st.session_state._turn_start_time
-            # Clear pending_turn if stuck
-            if st.session_state.get("pending_turn", False):
-                logger.debug("Clearing pending_turn flag when enabling auto-run")
-                st.session_state.pending_turn = False
-            st.toast("We are LIVE! Auto-run started.", icon=":material/broadcast_on_home:")
-            logger.info("Auto-run mode enabled - cleared all stuck flags")
-            st.rerun()
-        else:
-            # Shouldn't happen due to disabled state, but handle gracefully
-            st.session_state.auto_mode = False
-            st.warning("Cannot enable auto-run: No turns completed yet.")
-            logger.warning("Attempted to enable auto-run without completed turns")
-    elif not st.session_state.auto_mode and auto_mode_prev:
-        # Clear ALL waiting flags when disabling auto-run
-        if "_auto_run_waiting" in st.session_state:
-            del st.session_state._auto_run_waiting
-        if "_auto_run_wait_start" in st.session_state:
-            del st.session_state._auto_run_wait_start
-        # Also clear pending_turn to allow manual input
+        # User just enabled auto-run
+        import sys
+        print("=" * 80, file=sys.stderr, flush=True)
+        print("[AUTO-RUN TOGGLE] *** USER ENABLED AUTO-RUN ***", file=sys.stderr, flush=True)
+        print("=" * 80, file=sys.stderr, flush=True)
+        print("=" * 80, flush=True)
+        print("[AUTO-RUN TOGGLE] *** USER ENABLED AUTO-RUN ***", flush=True)
+        print("=" * 80, flush=True)
+        logger.info("=" * 60)
+        logger.info("[AUTO-RUN TOGGLE] *** USER ENABLED AUTO-RUN ***")
+        logger.info("=" * 60)
+        
+        # Write to file
+        try:
+            with open("/tmp/triadic_auto_run.log", "a") as f:
+                f.write(f"[{time.strftime('%H:%M:%S')}] *** USER ENABLED AUTO-RUN ***\n")
+                f.flush()
+        except Exception:
+            pass
+        
+        # CRITICAL: The safeguard logic must match the can_enable logic
+        # can_enable = has_completed_turn or current_auto_mode
+        # If the toggle was enabled (not disabled), it means can_enable was True
+        # Since the toggle is the source of truth and was enabled, we should trust it
+        # 
+        # However, we still validate: if has_completed_turn is False, we need to ensure
+        # that current_auto_mode was True (which allowed the toggle to be enabled)
+        # But since auto_mode is now True (user just enabled it), the condition is met
+        
+        # Validate: The toggle should only be enabled if can_enable was True
+        # can_enable = has_completed_turn or current_auto_mode
+        # Since auto_mode is now True, can_enable would be True regardless
+        # But to be safe, we still check has_completed_turn for the initial requirement
+        # However, if the toggle was enabled, we trust it (the disabled attribute prevented invalid clicks)
+        
+        # Ensure turn_in_progress is not stuck (simple cleanup)
+        if st.session_state.get("turn_in_progress", False):
+            logger.warning("[AUTO-RUN TOGGLE] Clearing stuck turn_in_progress flag when enabling auto-run")
+            st.session_state.turn_in_progress = False
+            if "_turn_start_time" in st.session_state:
+                del st.session_state._turn_start_time
+        
+        # Clear pending_turn if stuck
         if st.session_state.get("pending_turn", False):
+            logger.info("[AUTO-RUN TOGGLE] Clearing pending_turn flag when enabling auto-run")
             st.session_state.pending_turn = False
+        
+        # Clear auto-run execution flags if they exist
+        if "_auto_run_just_executed" in st.session_state:
+            logger.info("[AUTO-RUN TOGGLE] Clearing _auto_run_just_executed flag")
+            del st.session_state._auto_run_just_executed
+        
+        # Only show warning if has_completed_turn is False (but still allow it)
+        # This handles the case where auto_mode was True from restoration, allowing toggle to be enabled
+        if not has_completed_turn:
+            logger.info("[AUTO-RUN TOGGLE] Auto-run enabled without completed turns (likely from restored state)")
+        
+        # Log current state for debugging
+        has_messages = len(st.session_state.get("show_messages", [])) > 0
+        turn_in_progress = st.session_state.get("turn_in_progress", False)
+        just_executed = st.session_state.get("_auto_run_just_executed", False)
+        
+        import sys
+        print(f"[AUTO-RUN TOGGLE] Current state: has_messages={has_messages}, turn_in_progress={turn_in_progress}, just_executed={just_executed}", file=sys.stderr, flush=True)
+        print(f"[AUTO-RUN TOGGLE] Total turns: {st.session_state.get('total_turns', 0)}", file=sys.stderr, flush=True)
+        logger.info(f"[AUTO-RUN TOGGLE] Current state: has_messages={has_messages}, turn_in_progress={turn_in_progress}, just_executed={just_executed}")
+        logger.info(f"[AUTO-RUN TOGGLE] Total turns: {st.session_state.get('total_turns', 0)}")
+        
+        # Calculate what should_execute_auto would be
+        should_execute = (
+            st.session_state.auto_mode and 
+            not turn_in_progress and 
+            has_messages and
+            not just_executed
+        )
+        print(f"[AUTO-RUN TOGGLE] Should execute auto-run: {should_execute}", file=sys.stderr, flush=True)
+        logger.info(f"[AUTO-RUN TOGGLE] Should execute auto-run: {should_execute}")
+        
+        st.toast("We are LIVE! Auto-run started.", icon=":material/broadcast_on_home:")
+        logger.info("[AUTO-RUN TOGGLE] Auto-run mode enabled - cleared all stuck flags - triggering rerun")
+        st.rerun()
+    elif not st.session_state.auto_mode and auto_mode_prev:
+        # User just disabled auto-run
+        logger.info("=" * 60)
+        logger.info("[AUTO-RUN TOGGLE] *** USER DISABLED AUTO-RUN ***")
+        logger.info("=" * 60)
+        
+        # Clear pending_turn to allow manual input
+        if st.session_state.get("pending_turn", False):
+            logger.info("[AUTO-RUN TOGGLE] Clearing pending_turn flag when disabling auto-run")
+            st.session_state.pending_turn = False
+        
+        # Clear auto-run execution flags
+        if "_auto_run_just_executed" in st.session_state:
+            logger.info("[AUTO-RUN TOGGLE] Clearing _auto_run_just_executed flag when disabling auto-run")
+            del st.session_state._auto_run_just_executed
+        
         st.toast("Broadcast paused.", icon=":material/pause_circle:")
-        logger.info("Auto-run mode disabled - cleared all waiting flags")
+        logger.info("[AUTO-RUN TOGGLE] Auto-run mode disabled")
+    else:
+        logger.debug(f"[AUTO-RUN TOGGLE] No state change detected (auto_mode={st.session_state.auto_mode}, prev={auto_mode_prev})")
     
     st.space(1)
     
