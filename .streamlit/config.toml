@@ -1,0 +1,90 @@
+# Streamlit Configuration
+# Professional Dark Theme for Triadic Studio
+# Based on Streamlit 1.51+ theming documentation
+
+[theme]
+# Base theme: use Streamlit's dark theme as foundation
+base = "dark"
+
+# Primary color: Modern blue accent (matches GPT-A speaker color)
+primaryColor = "#4da6ff"
+
+# Background colors
+backgroundColor = "#0f172a"  # Deep slate-900 - professional dark background
+secondaryBackgroundColor = "#1e293b"  # Slate-800 - sidebar and widget background
+widgetBackgroundColor = "#1e293b"  # Consistent widget background
+codeBlockBackgroundColor = "#0f172a"  # Darker for code blocks
+dataframeHeaderBackgroundColor = "#1e293b"  # Consistent dataframe headers
+
+# Text colors
+textColor = "#f1f5f9"  # Slate-100 - bright, readable text
+secondaryTextColor = "#cbd5e1"  # Slate-300 - secondary text
+font = "sans serif"
+
+# Border styling
+borderRadius = "0.5rem"  # 8px - modern, subtle rounding
+borderColor = "rgba(148, 163, 184, 0.2)"  # Subtle slate border
+
+# Dark theme specific settings
+[theme.dark]
+# Main app colors
+backgroundColor = "#0f172a"
+secondaryBackgroundColor = "#1e293b"
+textColor = "#f1f5f9"
+primaryColor = "#4da6ff"
+
+# Sidebar colors (separate from main app)
+[theme.dark.sidebar]
+backgroundColor = "#1e293b"  # Slate-800
+textColor = "#f1f5f9"  # Slate-100
+borderColor = "rgba(148, 163, 184, 0.15)"  # Subtle border
+
+# Chart colors - Professional palette matching speaker colors
+[theme.chart]
+primaryColor = "#4da6ff"  # Blue (GPT-A)
+secondaryColor = "#ff6b6b"  # Red (GPT-B)
+tertiaryColor = "#10b981"  # Green (Host)
+quaternaryColor = "#f59e0b"  # Amber (accent)
+quinaryColor = "#8b5cf6"  # Purple (accent)
+
+# Font configuration
+[theme.font]
+# Base font settings
+size = "1rem"
+weight = "400"
+
+# Heading font
+[theme.font.heading]
+size = "1.5rem"
+weight = "700"
+
+# Code font
+[theme.font.code]
+size = "0.875rem"
+weight = "400"
+family = "monospace"
+
+# Color palette for markdown colored text and sparklines
+[theme.colorPalette]
+red = "#ef4444"      # Red-500
+orange = "#f97316"   # Orange-500
+yellow = "#eab308"   # Yellow-500
+green = "#10b981"    # Emerald-500 (matches Host)
+blue = "#4da6ff"     # Blue (matches GPT-A)
+violet = "#8b5cf6"   # Violet-500
+gray = "#6b7280"     # Gray-500
+
+# Server configuration
+[server]
+headless = true
+port = 8501
+
+# Browser settings
+[browser]
+gatherUsageStats = false
+
+# UI settings
+[ui]
+hideTopBar = false
+hideSidebarNav = false
+

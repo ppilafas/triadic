@@ -1,0 +1,163 @@
+/* public/custom.css - Minimal CSS using Chainlit native theme variables */
+
+/* Audio playback management */
+audio {
+    max-width: 100%;
+}
+
+/* Hide audio elements that are controlled by speaker icons */
+audio[src*="voice_"] {
+    display: none !important;
+}
+
+/* Speaker icon styling for on-demand audio playback */
+.speaker-icon {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 1.2em;
+    vertical-align: middle;
+    user-select: none;
+}
+
+.speaker-icon:hover {
+    transform: scale(1.2);
+    opacity: 0.8;
+}
+
+.speaker-icon:active {
+    transform: scale(0.95);
+}
+
+/* Message bubbles - using native Chainlit theme colors with minimal overrides */
+.message-host .message-content {
+    background-color: #056162;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    display: inline-block;
+    max-width: 85%;
+}
+
+.message-gpt-a .message-content {
+    background-color: #172e54;
+    color: #e0f2fe;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    display: inline-block;
+    max-width: 85%;
+}
+
+.message-gpt-b .message-content {
+    background-color: #450a0a;
+    color: #ffe4e6;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin: 8px 0;
+    display: inline-block;
+    max-width: 85%;
+}
+
+.message-system .message-content {
+    background-color: rgba(30, 41, 59, 0.5);
+    color: #94a3b8;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin: 8px 0;
+    border-left: 3px solid #ff6b6b;
+}
+
+/* ON AIR badge */
+.on-air-badge {
+    display: inline-block;
+    background-color: #ff6b6b;
+    color: #ffffff;
+    padding: 6px 14px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    animation: pulse-glow 2s infinite;
+    margin: 4px 8px 4px 0;
+}
+
+@keyframes pulse-glow {
+    0%, 100% { 
+        opacity: 1;
+        box-shadow: 0 0 10px rgba(255, 107, 107, 0.5);
+    }
+    50% { 
+        opacity: 0.85;
+        box-shadow: 0 0 20px rgba(255, 107, 107, 0.8);
+    }
+}
+
+/* Status badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin: 2px 4px;
+}
+
+.status-badge-low {
+    background-color: rgba(30, 41, 59, 0.6);
+    color: #93c5fd;
+}
+
+.status-badge-medium {
+    background-color: rgba(120, 53, 15, 0.6);
+    color: #fcd34d;
+}
+
+.status-badge-high {
+    background-color: rgba(124, 45, 18, 0.6);
+    color: #fca5a5;
+}
+
+/* Studio Deck - minimal styling to work with native dark mode */
+.studio-deck {
+    background: rgba(30, 41, 59, 0.3);
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+}
+
+/* Hide duplicate Studio Deck messages */
+article:has(.studio-deck) ~ article:has(.studio-deck) {
+    display: none !important;
+}
+
+/* Typography improvements */
+.message-content {
+    line-height: 1.6;
+    word-spacing: 0.05em;
+}
+
+.message-content p {
+    margin: 0.5em 0;
+}
+
+.message-content p:first-child {
+    margin-top: 0;
+}
+
+.message-content p:last-child {
+    margin-bottom: 0;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .message-host .message-content,
+    .message-gpt-a .message-content,
+    .message-gpt-b .message-content {
+        max-width: 95%;
+        padding: 10px 14px;
+    }
+}
