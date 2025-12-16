@@ -13,6 +13,7 @@
 
 import os
 import time
+import random
 import streamlit as st
 
 # Import centralized configuration
@@ -28,8 +29,7 @@ from utils.streamlit_irc import render_irc_style_history
 from utils.streamlit_chat_input import render_chat_input_container
 from utils.streamlit_sidebar import (
     render_sidebar_main_controls,
-    render_sidebar_knowledge_base,
-    render_sidebar_view_mode
+    render_sidebar_knowledge_base
 )
 from utils.streamlit_knowledge_base import render_knowledge_base_dialog
 
@@ -42,7 +42,9 @@ from utils.streamlit_auth import require_auth, get_current_user
 
 # Import business logic
 from services.turn_executor import execute_turn
+from services.topic_generator import generate_topics
 from utils.topic_handler import handle_auto_topic_generation, handle_topic_dialog
+from utils.message_history import add_message_to_history
 # Note: Removed auto_run_manager imports - using simpler inline approach that worked before
 
 # Initialize logging
@@ -107,10 +109,6 @@ def home_page():
         elif is_guest:
             st.caption(":material/person_off: **Guest Mode** (no persistence)")
         
-        st.divider()
-        
-        # View mode toggle (Bubbles vs IRC-style)
-        render_sidebar_view_mode()
         st.divider()
         
         # Main Controls
@@ -208,6 +206,7 @@ pages = [
     st.Page("pages/2_🗄️_Vector_Stores.py", title="Vector Stores", icon=":material/storage:"),
     st.Page("pages/3_📊_Telemetry.py", title="Telemetry", icon=":material/analytics:"),
     st.Page("pages/4_📅_Timeline.py", title="Timeline", icon=":material/timeline:"),
+    st.Page("pages/5_👤_Personas.py", title="Personas", icon=":material/psychology:"),
 ]
 
 # Create navigation (landing page is accessible via st.switch_page but not shown in sidebar)
@@ -255,6 +254,58 @@ def podcast_stage():
         st.info(f":material/summarize: **Discussion Progress:** {conversation_summary}", icon=":material/info:")
     else:
         st.caption("AI-to-AI Self-Dialogue • Powered by OpenAI GPT-5")
+    
+    # Random Topic button below header
+    if st.button(
+        ":material/casino: Discuss a Random Topic",
+        key="home_random_topic",
+        help="Generate or select a random topic and start the discussion",
+        use_container_width=True
+    ):
+        # Check if we have existing topics
+        topics = st.session_state.get("topic_suggestions", [])
+        if not topics:
+            # Generate topics first
+            with st.spinner("Generating topics..."):
+                has_documents = bool(st.session_state.get("uploaded_file_index", {}))
+                vector_store_id = st.session_state.get("vector_store_id")
+                try:
+                    topics = generate_topics(
+                        has_documents=has_documents,
+                        vector_store_id=vector_store_id
+                    )
+                    st.session_state.topic_suggestions = topics
+                except Exception as e:
+                    logger.error(f"Failed to generate topics: {e}", exc_info=True)
+                    st.error("Failed to generate topics. Please try again.")
+                    topics = []
+        
+        # Select a random topic
+        if topics:
+            random_topic = random.choice(topics)
+            
+            # Inject the topic as a host message
+            timestamp = time.strftime("%H:%M:%S")
+            add_message_to_history(
+                speaker="host",
+                content=f"Let's discuss: {random_topic}",
+                timestamp=timestamp
+            )
+            
+            # Set pending turn to start the discussion
+            st.session_state.pending_turn = True
+            
+            st.toast(f"Random topic injected: {random_topic}", icon=":material/casino:")
+            logger.info(f"Random topic injected: {random_topic}")
+            
+            # Auto-save after topic injection
+            auto_save_session_state()
+            
+            st.rerun()
+        else:
+            st.warning("No topics available. Please upload documents in the Knowledge Base section to generate topics.")
+    
+    st.divider()
     
     # Handle auto topic generation and dialog
     handle_auto_topic_generation()

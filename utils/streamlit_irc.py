@@ -22,11 +22,19 @@ logger = get_logger(__name__)
 # Typical terminal width is 80, but we use 100 for better readability
 IRC_LINE_WIDTH = 100
 
-# Speaker color mapping for IRC text (using colors from SPEAKER_INFO)
+# Speaker color mapping for IRC text
+# Header colors (speaker names) - darker, more vibrant
+SPEAKER_HEADER_COLORS = {
+    "host": "#10b981",      # Emerald green (original darker)
+    "gpt_a": "#3b82f6",     # Bright blue (original darker)
+    "gpt_b": "#ef4444",     # Bright red (original darker)
+}
+
+# Content colors (message text) - lighter for better readability
 SPEAKER_TEXT_COLORS = {
-    "host": "#10b981",      # Emerald green
-    "gpt_a": "#3b82f6",     # Bright blue
-    "gpt_b": "#ef4444",     # Bright red
+    "host": "#6ee7b7",      # Very light emerald green
+    "gpt_a": "#93c5fd",     # Very light blue
+    "gpt_b": "#fca5a5",     # Very light red/coral
 }
 
 
@@ -76,6 +84,7 @@ def _wrap_irc_line(prefix: str, content: str, suffix: str = "", continuation_ind
 def _format_irc_header_html(header_line: str, speaker_key: str) -> str:
     """
     Format the header line (speaker name + timestamp) with color coding.
+    Uses darker colors for speaker names to maintain distinction.
     
     Args:
         header_line: Header line text (e.g., "🔵 GPT-A (The Analyst) • 13:28:21")
@@ -86,7 +95,8 @@ def _format_irc_header_html(header_line: str, speaker_key: str) -> str:
     """
     import re
     
-    speaker_color = SPEAKER_TEXT_COLORS.get(speaker_key, "#cbd5e1")
+    # Use darker header colors for speaker names
+    speaker_color = SPEAKER_HEADER_COLORS.get(speaker_key, "#cbd5e1")
     
     # Get selected font from settings
     selected_font = st.session_state.get("irc_font", "Hack")

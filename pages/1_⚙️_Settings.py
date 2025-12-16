@@ -149,37 +149,69 @@ with st.container():
 
 st.divider()
 
-# IRC View Settings
+# Display View Settings
 with st.container():
     st.markdown('<div class="settings-section-card">', unsafe_allow_html=True)
-    st.markdown("### :material/code: IRC View Settings")
+    st.markdown("### :material/view_module: Display View Settings")
     
-    # Available cyberpunk/terminal fonts
-    irc_fonts = {
-        "Hack": "Hack",
-        "Fira Code": "Fira Code",
-        "JetBrains Mono": "JetBrains Mono",
-        "Source Code Pro": "Source Code Pro",
-        "IBM Plex Mono": "IBM Plex Mono",
-        "Operator Mono": "Operator Mono",
-        "Space Mono": "Space Mono",
-        "Anonymous Pro": "Anonymous Pro",
-        "Courier Prime Code": "Courier Prime Code",
-        "Courier New": "Courier New"  # Fallback
+    # View Mode Selection
+    view_modes = {
+        "bubbles": ":material/chat_bubble: Bubbles",
+        "irc": ":material/code: IRC Text"
     }
     
-    current_font = st.session_state.get("irc_font", "Hack")
-    font_index = list(irc_fonts.keys()).index(current_font) if current_font in irc_fonts else 0
+    current_mode = st.session_state.get("view_mode", "irc")
+    mode_index = list(view_modes.keys()).index(current_mode) if current_mode in view_modes else 0
     
-    st.session_state.irc_font = st.selectbox(
-        "**IRC Font**",
-        options=list(irc_fonts.keys()),
-        index=font_index,
-        key="irc_font_settings",
-        help="Select font for IRC text view mode. Cyberpunk-style fonts recommended!"
+    selected_mode = st.radio(
+        "**Display Style**",
+        options=list(view_modes.keys()),
+        format_func=lambda x: view_modes[x],
+        index=mode_index,
+        key="view_mode_settings",
+        help="Choose between styled bubbles or IRC-style plain text view"
     )
     
-    st.caption("💡 Fonts like Hack, Fira Code, and JetBrains Mono give a cyberpunk terminal aesthetic.")
+    if selected_mode != current_mode:
+        st.session_state.view_mode = selected_mode
+        logger.info(f"View mode switched from {current_mode} to {selected_mode}")
+        st.rerun()
+    
+    st.divider()
+    
+    # IRC View Settings (only show when IRC mode is selected)
+    if st.session_state.get("view_mode", "irc") == "irc":
+        st.markdown("#### :material/code: IRC View Options")
+        
+        # Available cyberpunk/terminal fonts
+        irc_fonts = {
+            "Hack": "Hack",
+            "Fira Code": "Fira Code",
+            "JetBrains Mono": "JetBrains Mono",
+            "Source Code Pro": "Source Code Pro",
+            "IBM Plex Mono": "IBM Plex Mono",
+            "Operator Mono": "Operator Mono",
+            "Space Mono": "Space Mono",
+            "Anonymous Pro": "Anonymous Pro",
+            "Courier Prime Code": "Courier Prime Code",
+            "Courier New": "Courier New"  # Fallback
+        }
+        
+        current_font = st.session_state.get("irc_font", "Hack")
+        font_index = list(irc_fonts.keys()).index(current_font) if current_font in irc_fonts else 0
+        
+        st.session_state.irc_font = st.selectbox(
+            "**IRC Font**",
+            options=list(irc_fonts.keys()),
+            index=font_index,
+            key="irc_font_settings",
+            help="Select font for IRC text view mode. Cyberpunk-style fonts recommended!"
+        )
+        
+        st.caption("💡 Fonts like Hack, Fira Code, and JetBrains Mono give a cyberpunk terminal aesthetic.")
+    else:
+        st.caption("💡 Switch to IRC Text view to customize font settings.")
+    
     st.markdown('</div>', unsafe_allow_html=True)
 
 st.divider()
@@ -268,6 +300,8 @@ if "summary_interval_settings" in st.session_state:
     st.session_state["summary_interval"] = st.session_state["summary_interval_settings"]
 if "irc_font_settings" in st.session_state:
     st.session_state["irc_font"] = st.session_state["irc_font_settings"]
+if "view_mode_settings" in st.session_state:
+    st.session_state["view_mode"] = st.session_state["view_mode_settings"]
 
 # Auto-save settings when page is viewed (settings are updated via widgets)
 auto_save_session_state()

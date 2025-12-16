@@ -9,6 +9,7 @@ from typing import Optional
 from ai_api import index_uploaded_files
 from exceptions import FileIndexingError
 from utils.logging_config import get_logger
+from utils.streamlit_file_helpers import parse_file_key
 
 logger = get_logger(__name__)
 
@@ -82,7 +83,7 @@ def _render_file_upload_tab() -> None:
         
         # Display file list (show filename from key)
         for key in list(index_map.keys())[:10]:  # Show first 10
-            file_name = key.split(":")[0] if ":" in key else key
+            file_name, _ = parse_file_key(key)
             st.caption(f":material/description: {file_name}")
         
         if indexed_count > 10:

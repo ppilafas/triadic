@@ -73,6 +73,23 @@ def build_prompt_from_messages(
     system_instructions = load_system_prompt()
     lines = [system_instructions]
     
+    # Add persona-specific instructions if available in session state
+    try:
+        import streamlit as st
+        if next_speaker == "gpt_a" and "persona_gpt_a" in st.session_state:
+            persona = st.session_state.persona_gpt_a.strip()
+            if persona:
+                lines.append("")
+                lines.append(persona)
+        elif next_speaker == "gpt_b" and "persona_gpt_b" in st.session_state:
+            persona = st.session_state.persona_gpt_b.strip()
+            if persona:
+                lines.append("")
+                lines.append(persona)
+    except (ImportError, RuntimeError):
+        # Not in Streamlit context, skip persona instructions
+        pass
+    
     # Add tool availability information if tools are available
     if available_tools:
         tool_info = []

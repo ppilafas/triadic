@@ -58,3 +58,6 @@ Thumbs.db
 # Chainlit
 .chainlit/
 
+# Documentation / scratch markdowns
+markdowns/
+

@@ -1555,6 +1555,121 @@
         }
         
         .settings-section-card h3 {
+            display: flex !important;
+            align-items: center !important;
+            gap: var(--spacing-sm) !important;
+            font-size: var(--font-size-2xl) !important;
+            font-weight: var(--font-weight-bold) !important;
+            color: #f1f5f9 !important;
             margin-top: 0 !important;
+            margin-bottom: var(--spacing-lg) !important;
             padding-top: 0 !important;
+            padding-bottom: var(--spacing-md) !important;
+            border-bottom: 2px solid rgba(77, 166, 255, 0.3) !important;
+        }
+        
+        /* ========== TELEMETRY PAGE SPECIFIC STYLING ========== */
+        /* Enhanced metric cards for telemetry page */
+        .settings-section-card [data-testid="stMetricContainer"] {
+            margin-bottom: var(--spacing-md) !important;
+        }
+        
+        /* Better spacing for metric columns in telemetry */
+        .settings-section-card [data-testid="column"] {
+            padding: 0 var(--spacing-sm) !important;
+        }
+        
+        /* Status badge enhancements for telemetry */
+        .settings-section-card [data-testid="stBadge"] {
+            margin-top: var(--spacing-xs) !important;
+            font-size: var(--font-size-xs) !important;
+            font-weight: var(--font-weight-bold) !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+        }
+        
+        /* Status badge enhancements - apply to all badges in telemetry cards */
+        .settings-section-card [data-testid="stBadge"] {
+            transition: all var(--duration-normal) var(--ease-out) !important;
+        }
+        
+        /* Enhanced info message styling for empty state */
+        .settings-section-card [data-testid="stInfo"] {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%) !important;
+            border: 1.5px solid rgba(77, 166, 255, 0.4) !important;
+            border-radius: var(--radius-lg) !important;
+            padding: var(--spacing-xl) !important;
+            box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+            text-align: center !important;
+        }
+        
+        .settings-section-card [data-testid="stInfo"] p {
+            font-size: var(--font-size-lg) !important;
+            font-weight: var(--font-weight-medium) !important;
+            color: #cbd5e1 !important;
+            margin: 0 !important;
+        }
+        
+        /* Chart container styling for better integration */
+        .settings-section-card [data-testid="stVegaLiteChart"] {
+            background: rgba(15, 23, 42, 0.3) !important;
+            border-radius: var(--radius-md) !important;
+            padding: var(--spacing-md) !important;
+            margin-top: var(--spacing-lg) !important;
+        }
+        
+        /* Section header improvements - now applied globally above */
+        
+        /* Sub-section headers (h4) in telemetry cards */
+        .settings-section-card h4 {
+            font-size: var(--font-size-lg) !important;
+            font-weight: var(--font-weight-semibold) !important;
+            color: #cbd5e1 !important;
+            margin-top: var(--spacing-lg) !important;
+            margin-bottom: var(--spacing-md) !important;
+            padding-bottom: var(--spacing-sm) !important;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.2) !important;
+        }
+        
+        /* Better spacing for statistics columns */
+        .settings-section-card [data-testid="column"]:has([data-testid="stMetricContainer"]) {
+            padding: 0 var(--spacing-md) !important;
+        }
+        
+        /* Status badge styling for telemetry - using custom classes */
+        .status-badge-live {
+            display: inline-block !important;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+            border: 1px solid rgba(16, 185, 129, 0.5) !important;
+            color: white !important;
+            padding: var(--spacing-xs) var(--spacing-sm) !important;
+            border-radius: var(--radius-md) !important;
+            font-size: var(--font-size-xs) !important;
+            font-weight: var(--font-weight-bold) !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+            animation: pulse-green 2s infinite !important;
+            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4) !important;
+            margin-top: var(--spacing-xs) !important;
+        }
+        
+        .status-badge-standby {
+            display: inline-block !important;
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%) !important;
+            border: 1px solid rgba(107, 114, 128, 0.5) !important;
+            color: white !important;
+            padding: var(--spacing-xs) var(--spacing-sm) !important;
+            border-radius: var(--radius-md) !important;
+            font-size: var(--font-size-xs) !important;
+            font-weight: var(--font-weight-bold) !important;
+            letter-spacing: 0.5px !important;
+            text-transform: uppercase !important;
+            margin-top: var(--spacing-xs) !important;
+        }
+        
+        /* Delta styling for turn count */
+        .settings-section-card [data-testid="stMetricDelta"] {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(5, 150, 105, 0.15) 100%) !important;
+            border: 1px solid rgba(16, 185, 129, 0.3) !important;
+            color: #10b981 !important;
         }

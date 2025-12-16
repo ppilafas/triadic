@@ -26,7 +26,7 @@ def render_system_metrics(
         latency: Last turn latency as string (e.g., "2.34s")
         model_name: Current model name
     """
-    st.markdown("#### :material/dashboard: System Metrics")
+    # Note: Section heading is rendered by the page, so we don't need h4 here
     c1, c2, c3, c4 = st.columns(4)
     
     # Status metric with native components
@@ -40,9 +40,15 @@ def render_system_metrics(
     with c1:
         try:
             if auto_mode:
-                st.badge("● LIVE")
+                st.markdown(
+                    '<span class="status-badge-live">● LIVE</span>',
+                    unsafe_allow_html=True
+                )
             else:
-                st.badge("○ STANDBY")
+                st.markdown(
+                    '<span class="status-badge-standby">○ STANDBY</span>',
+                    unsafe_allow_html=True
+                )
         except AttributeError:
             pass  # Fallback if st.badge not available
     
@@ -83,7 +89,7 @@ def render_conversation_statistics(messages: List[Dict[str, Any]]) -> None:
         st.info("Telemetry data will appear here after the first turn.", icon=":material/trending_up:")
         return
     
-    st.markdown("#### :material/bar_chart: Conversation Statistics")
+    # Note: Section heading is rendered by the page, so we don't need h4 here
     df = pd.DataFrame(messages).reset_index()
     
     # Summary statistics with native badges
